@@ -50,7 +50,52 @@ export function useAuth() {
 
   useEffect(() => {
     const stored = loadStoredUser();
-    if (stored) setUser(stored);
+    if (stored) {
+      setUser(stored);
+      setInitialized(true);
+      return;
+    }
+
+    // Auto-login when running inside Toss WebView (no stored user yet)
+    if (isTossApp()) {
+      logger.info('Toss environment detected — auto login');
+      (async () => {
+        try {
+          const { authorizationCode } = await appLogin();
+          const res = await fetch('/api/toss-auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ authorizationCode }),
+          });
+          if (!res.ok) throw new Error('Toss auto-login exchange failed');
+          const data = await res.json() as { userId: string; nickname: string; avatarUrl?: string };
+
+          const upsertRes = await fetch('/api/user/upsert', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ provider: 'toss', providerId: data.userId, nickname: data.nickname, avatarUrl: data.avatarUrl }),
+          });
+          const upsertData = upsertRes.ok ? (await upsertRes.json() as { ok: boolean; data?: { userId: string; elo: number } }) : null;
+
+          const authUser: AuthUser = {
+            userId: upsertData?.data?.userId ?? data.userId,
+            nickname: data.nickname,
+            avatarUrl: data.avatarUrl,
+            provider: 'toss',
+            elo: upsertData?.data?.elo ?? 1000,
+          };
+          saveUser(authUser);
+          setUser(authUser);
+          logger.info('Toss auto-login success', { userId: authUser.userId });
+        } catch (err) {
+          logger.error('Toss auto-login failed', err);
+        } finally {
+          setInitialized(true);
+        }
+      })();
+      return;
+    }
+
     setInitialized(true);
   }, []);
 

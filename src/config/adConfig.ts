@@ -9,9 +9,10 @@ export type AdSlot =
   | 'lobby_banner'       // 320×50 fixed bottom banner on lobby
   | 'loading_interstitial' // Full-screen before match
   | 'set_break_banner'    // Between sets (auto-close 3s)
-  | 'result_interstitial'; // Full-screen on result screen
+  | 'result_interstitial' // Full-screen on result screen
+  | 'toss_rewarded';      // Toss GoogleAdMob rewarded ad
 
-export type AdProvider = 'kakao_adfit' | 'google_adsense' | 'none';
+export type AdProvider = 'kakao_adfit' | 'google_adsense' | 'toss_admob' | 'none';
 
 export interface AdSlotConfig {
   slot: AdSlot;
@@ -59,6 +60,14 @@ export const AD_SLOTS: Record<AdSlot, AdSlotConfig> = {
     unitId: envOr('NEXT_PUBLIC_ADSENSE_RESULT_UNIT_ID'),
     width: 320,
     height: 480,
+    autoCloseMs: 0,
+  },
+  toss_rewarded: {
+    slot: 'toss_rewarded',
+    provider: 'toss_admob',
+    unitId: envOr('NEXT_PUBLIC_TOSS_ADMOB_REWARDED_UNIT_ID'),
+    width: 0,
+    height: 0,
     autoCloseMs: 0,
   },
 };

@@ -15,10 +15,20 @@ import logger from './logger';
 
 // ─── Internal: typed access to the injected global ───────────────────────────
 
+interface AdMobInstance {
+  load(): void;
+  show(): void;
+  onEvent(event: 'loaded' | 'rewarded' | 'closed' | 'error', cb: () => void): void;
+}
+
 interface TossSDK {
   appLogin(): Promise<{ authorizationCode: string; referrer?: string }>;
   share(opts: { message: string }): Promise<void>;
   contactsViral(): Promise<void>;
+  getTossShareLink?(url: string, ogImageUrl?: string): string;
+  GoogleAdMob?: {
+    create(unitId: string): AdMobInstance;
+  };
 }
 
 function getTossSDK(): TossSDK | null {
@@ -64,6 +74,72 @@ export async function share(message: string): Promise<void> {
     return;
   }
   await sdk.share({ message });
+}
+
+// ─── Deep Link Share ──────────────────────────────────────────────────────────
+
+/**
+ * Generate a Toss deep link for sharing. Falls back to raw URL outside Toss.
+ */
+export function getTossShareLink(url: string, ogImageUrl?: string): string {
+  const sdk = getTossSDK();
+  if (sdk?.getTossShareLink) {
+    return sdk.getTossShareLink(url, ogImageUrl);
+  }
+  return url;
+}
+
+// ─── Friend Invite (Contacts Viral) ──────────────────────────────────────────
+
+/**
+ * Open Toss contacts picker for viral friend invite.
+ * No-op outside Toss WebView.
+ */
+export async function contactsViral(): Promise<void> {
+  const sdk = getTossSDK();
+  if (!sdk) {
+    logger.warn('contactsViral() called outside Toss WebView — skipping');
+    return;
+  }
+  logger.info('Opening Toss contacts viral');
+  await sdk.contactsViral();
+}
+
+// ─── Rewarded Ad (Toss GoogleAdMob) ──────────────────────────────────────────
+
+/**
+ * Show a Toss GoogleAdMob rewarded ad. Resolves `true` if user watched the ad.
+ * Falls back to resolving `false` outside Toss.
+ */
+export function showRewardedAd(unitId: string): Promise<boolean> {
+  const sdk = getTossSDK();
+  if (!sdk?.GoogleAdMob) {
+    logger.warn('GoogleAdMob not available — skipping rewarded ad');
+    return Promise.resolve(false);
+  }
+
+  return new Promise((resolve) => {
+    const ad = sdk.GoogleAdMob!.create(unitId);
+
+    ad.onEvent('loaded', () => {
+      ad.show();
+    });
+
+    ad.onEvent('rewarded', () => {
+      resolve(true);
+    });
+
+    ad.onEvent('closed', () => {
+      resolve(false);
+    });
+
+    ad.onEvent('error', () => {
+      logger.error('Rewarded ad error');
+      resolve(false);
+    });
+
+    ad.load();
+  });
 }
 
 // ─── Back button (Android hardware back) ─────────────────────────────────────

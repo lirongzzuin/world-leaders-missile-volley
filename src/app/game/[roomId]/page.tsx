@@ -1,12 +1,12 @@
 'use client';
 
-import { Suspense, useState, useCallback } from 'react';
+import { Suspense, useState, useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import type { GameConfig } from '@/types/game';
 import { CHARACTER_MAP } from '@/config/characters';
 import { calculateNewElos } from '@/lib/elo';
-import { share } from '@/lib/apps-in-toss';
+import { share, getTossShareLink, registerBackHandler, isTossApp } from '@/lib/apps-in-toss';
 import { useAuth } from '@/hooks/useAuth';
 import AdBanner from '@/components/ads/AdBanner';
 
@@ -45,6 +45,18 @@ function GamePageInner() {
   const [result, setResult] = useState<MatchResult | null>(null);
   const [showAd, setShowAd] = useState(false);
 
+  // Toss back handler — go to lobby instead of browser back
+  useEffect(() => {
+    if (!isTossApp()) return;
+    return registerBackHandler(() => {
+      if (result !== null) {
+        router.push('/lobby');
+      } else if (window.confirm('경기를 포기하시겠습니까?')) {
+        router.push('/lobby');
+      }
+    });
+  }, [result, router]);
+
   const p1 = CHARACTER_MAP[p1Id];
   const p2 = CHARACTER_MAP[p2Id];
 
@@ -76,7 +88,11 @@ function GamePageInner() {
     const eloChange = isPlayerWin ? eloResult.winnerChange : eloResult.loserChange;
 
     const handleShare = async () => {
-      const msg = `${p1?.name}(으)로 ${p2?.name}에게 ${isPlayerWin ? '승리' : '패배'}! ELO ${eloChange > 0 ? '+' : ''}${eloChange} | 세계 지도자 핵미사일 배구 🚀`;
+      const shareLink = getTossShareLink(
+        typeof window !== 'undefined' ? window.location.origin : '',
+        undefined
+      );
+      const msg = `${p1?.name}(으)로 ${p2?.name}에게 ${isPlayerWin ? '승리' : '패배'}! ELO ${eloChange > 0 ? '+' : ''}${eloChange} | 세계 지도자 핵미사일 배구 🚀\n${shareLink}`;
       await share(msg);
     };
 

@@ -8,6 +8,7 @@ import NewsTickerBar from '@/components/ui/NewsTickerBar';
 import BottomNav from '@/components/ui/BottomNav';
 import AdBanner from '@/components/ads/AdBanner';
 import { getTier } from '@/lib/elo';
+import { contactsViral, isTossApp, registerBackHandler } from '@/lib/apps-in-toss';
 import type { GetProfileResponse } from '@/types/api';
 
 const LEGAL_OVERLAY_DURATION = 4000;
@@ -83,6 +84,16 @@ export default function LobbyPage() {
       })
       .catch(() => {/* offline — keep placeholders */});
   }, [user]);
+
+  // Toss back button handler — confirm exit
+  useEffect(() => {
+    if (!isTossApp()) return;
+    return registerBackHandler(() => {
+      if (window.confirm('게임을 종료하시겠습니까?')) {
+        window.close();
+      }
+    });
+  }, []);
 
   const tier = user ? getTier(user.elo) : null;
 
@@ -187,6 +198,23 @@ export default function LobbyPage() {
             </Link>
           ))}
         </div>
+
+        {/* 친구 초대 (Toss contactsViral) */}
+        {isTossApp() && (
+          <button
+            onClick={() => contactsViral()}
+            className="mt-4 w-full p-4 rounded-xl bg-accent-cyan/10 border border-accent-cyan/30 flex items-center gap-4 active:bg-accent-cyan/20 transition-colors"
+          >
+            <div className="size-10 flex items-center justify-center bg-accent-cyan rounded-lg text-background-dark shrink-0">
+              <span className="material-symbols-outlined font-bold">group_add</span>
+            </div>
+            <div className="flex-1 text-left">
+              <h4 className="text-xs font-black text-accent-cyan uppercase">친구 초대</h4>
+              <p className="text-sm font-medium text-slate-300">토스 친구에게 도전장을 보내세요!</p>
+            </div>
+            <span className="material-symbols-outlined text-accent-cyan">chevron_right</span>
+          </button>
+        )}
 
         {/* 소식 카드 */}
         <div className="mt-4 p-4 rounded-xl bg-primary/5 border border-primary/20 flex items-center gap-4">

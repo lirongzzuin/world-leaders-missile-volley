@@ -273,13 +273,29 @@ export function isTossApp(): boolean {
 }
 ```
 
-| 기능 | 토스 앱 내부 | 일반 브라우저 |
-|------|-------------|-------------|
-| 로그인 | `appLogin()` → OAuth 교환 | 게스트 로그인 |
-| 공유 | `share({ message })` | `navigator.share` fallback |
-| 결제 (추후) | `createOneTimePurchaseOrder` | 미지원 |
+### SDK 통합 범위
 
-SDK 패키지(`@apps-in-toss/web-framework`)는 설치하지 않고, 토스 앱이 런타임에 주입합니다. `next.config.mjs`에서 webpack external로 처리하고, 타입 심(shim)으로 TypeScript 호환성을 확보합니다.
+| 기능 | API | 토스 앱 내부 | 일반 브라우저 |
+|------|-----|-------------|-------------|
+| **자동 로그인** | `appLogin()` | 앱 진입 시 자동 OAuth → 스플래시 건너뜀 | 수동 게스트/카카오/구글 로그인 |
+| **결과 공유** | `share({ message })` + `getTossShareLink()` | 토스 딥링크 포함 공유 | `navigator.share` fallback |
+| **친구 초대** | `contactsViral()` | 토스 연락처 피커 → 초대 메시지 전송 | 버튼 미표시 |
+| **리워드 광고** | `GoogleAdMob.create()` | load → show → rewarded 2단계 | 기존 AdFit/AdSense 사용 |
+| **뒤로가기** | `registerBackHandler()` | 안드로이드 하드웨어 백 → 확인 다이얼로그 | 브라우저 기본 동작 |
+| **결제 (추후)** | `createOneTimePurchaseOrder` | IAP 콜백 패턴 | 미지원 |
+
+### 환경별 로그인 UX
+
+- **토스 환경**: 앱 진입 즉시 `appLogin()` → 서버 토큰 교환 → 자동 로비 이동. 스플래시에서 카카오/구글/게스트 버튼 숨김.
+- **일반 브라우저**: 나이 확인 → 닉네임 입력 → 카카오/구글/게스트 중 선택.
+
+### 기술 구현
+
+SDK 패키지(`@apps-in-toss/web-framework`)는 설치하지 않고, 토스 앱이 런타임에 `window.__APPS_IN_TOSS__`로 주입합니다.
+
+- `next.config.mjs`에서 webpack external로 등록하여 빌드 시 번들링 방지
+- `src/types/apps-in-toss-framework.d.ts`에 타입 심(shim)을 두어 TypeScript 호환성 확보
+- `src/lib/apps-in-toss.ts`가 모든 SDK 호출을 래핑하며, 토스 미환경 시 graceful fallback 제공
 
 ---
 
@@ -411,6 +427,8 @@ npm run test:watch    # 워치 모드
 | `NEXT_PUBLIC_SOCKET_SERVER_URL` | 선택 | Socket.io 서버 URL |
 | `TOSS_CLIENT_ID` | 선택 | 토스 OAuth 클라이언트 ID |
 | `TOSS_CLIENT_SECRET` | 선택 | 토스 OAuth 시크릿 |
+| `TOSS_REDIRECT_URI` | 선택 | 토스 OAuth 리다이렉트 URI |
+| `NEXT_PUBLIC_TOSS_ADMOB_REWARDED_UNIT_ID` | 선택 | 토스 리워드 광고 단위 ID |
 | `KAKAO_CLIENT_ID` | 선택 | 카카오 로그인 |
 | `GOOGLE_CLIENT_ID` | 선택 | 구글 로그인 |
 | `SERVER_SECRET` | 선택 | 서버간 통신 시크릿 |
@@ -459,6 +477,7 @@ fly scale count 1
 
 ## 향후 계획
 
+- [x] 토스 앱인토스 SDK 전체 통합 (자동 로그인, 공유, 친구 초대, 리워드 광고, 뒤로가기)
 - [ ] 온라인 2v2 동맹전 모드 구현
 - [ ] 사운드 엔진 (효과음 + 배경음)
 - [ ] 신규 캐릭터 추가 (시즌별)
