@@ -1,0 +1,32 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --include=dev
+
+COPY tsconfig.json tsconfig.server.json ./
+COPY src/server ./src/server
+COPY src/game ./src/game
+COPY src/lib/elo.ts ./src/lib/elo.ts
+COPY src/config ./src/config
+COPY src/types ./src/types
+
+RUN npx tsc -p tsconfig.server.json
+
+# ── Runtime image ──────────────────────────────────────────────────────────────
+FROM node:20-alpine AS runtime
+
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+
+COPY --from=builder /app/dist ./dist
+
+# Path alias resolution at runtime
+RUN npm install tsconfig-paths --save-optional
+
+EXPOSE 3001
+
+ENV NODE_ENV=production
+
+CMD ["node", "-r", "tsconfig-paths/register", "dist/server/server/socket-server.js"]

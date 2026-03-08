@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  provider    String   // "toss" | "kakao" | "google" | "guest"
+  providerId  String
+  nickname    String
+  avatarUrl   String?
+  elo         Int      @default(1000)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  gameRecords GameRecord[] @relation("player")
+  opponents   GameRecord[] @relation("opponent")
+
+  @@unique([provider, providerId])
+  @@index([elo(sort: Desc)])
+}
+
+model GameRecord {
+  id               String   @id @default(cuid())
+  playerId         String
+  opponentId       String
+  playerCharId     String
+  opponentCharId   String
+  result           String   // "win" | "loss"
+  eloChange        Int
+  eloAfter         Int
+  mode             String   // "online_1v1" | "vs_ai" | "local_1v1" | "online_2v2"
+  durationSec      Int      @default(0)
+  playedAt         DateTime @default(now())
+
+  player   User @relation("player",   fields: [playerId],   references: [id])
+  opponent User @relation("opponent", fields: [opponentId], references: [id])
+
+  @@index([playerId, playedAt(sort: Desc)])
+  @@index([playedAt])
+}

@@ -1,0 +1,51 @@
+{
+  "name": "world-leaders-missile-volley",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --watch",
+    "server:dev": "ts-node --project tsconfig.server.json -r tsconfig-paths/register src/server/socket-server.ts",
+    "server:build": "tsc -p tsconfig.server.json",
+    "server:start": "node -r tsconfig-paths/register dist/server/server/socket-server.js"
+  },
+  "dependencies": {
+    "next": "14.2.5",
+    "@prisma/client": "^5.22.0",
+    "react": "^18",
+    "react-dom": "^18",
+    "next-auth": "^4.24.7",
+    "@supabase/supabase-js": "^2.43.4",
+    "@upstash/redis": "^1.31.3",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.7.5",
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "framer-motion": "^11.2.10",
+    "zustand": "^4.5.2"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "tailwindcss": "^3.4.4",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.5",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.12",
+    "jest-environment-jsdom": "^29.7.0",
+    "ts-jest": "^29.1.4",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "prisma": "^5.22.0"
+  }
+}

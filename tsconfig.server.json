@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/server",
+    "rootDir": "src",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "target": "ES2020",
+    "noEmit": false,
+    "declaration": false,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/server/**/*", "src/game/**/*", "src/lib/elo.ts", "src/config/**/*", "src/types/**/*"],
+  "exclude": ["node_modules", "dist", "src/app", "src/components", "src/hooks"]
+}

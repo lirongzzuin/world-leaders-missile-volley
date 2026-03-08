@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CRT scanline overlay — applied globally via layout */
+.crt-overlay {
+  background:
+    linear-gradient(rgba(18, 16, 1, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+    linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  background-size: 100% 4px, 3px 100%;
+  pointer-events: none;
+}
+
+/* Hazard stripe (yellow/black diagonal) */
+.hazard-stripe {
+  background: repeating-linear-gradient(
+    45deg,
+    #f9d406,
+    #f9d406 10px,
+    #1a180b 10px,
+    #1a180b 20px
+  );
+}
+
+/* Pixel shadow for headings */
+.pixel-shadow {
+  text-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5);
+}
+
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Material Symbols font-variation helper */
+.fill-icon { font-variation-settings: 'FILL' 1; }
